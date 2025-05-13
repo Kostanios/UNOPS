@@ -2,7 +2,6 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { AccommodationService } from './accommodation.service';
 import { ListingService } from './listing.service';
 
-
 @Controller()
 export class DataController {
   constructor(
@@ -10,14 +9,13 @@ export class DataController {
     private readonly listingService: ListingService,
   ) {}
 
-  @Get('data')
-  async getFiltered(@Query() query: Record<string, string>) {
+  @Get('data/accommodations')
+  async getAccommodations(@Query() query: Record<string, string>) {
     const accomQuery: any = {};
-    const listingQuery: any = {};
+    const limit = query.limit ? +query.limit : 10;
 
     if (query.city) {
       accomQuery['address.city'] = new RegExp(query.city, 'i');
-      listingQuery.city = new RegExp(query.city, 'i');
     }
 
     if (query.country) {
@@ -29,7 +27,6 @@ export class DataController {
       if (query.priceMin) priceRange.$gte = +query.priceMin;
       if (query.priceMax) priceRange.$lte = +query.priceMax;
       accomQuery.priceForNight = priceRange;
-      listingQuery.pricePerNight = priceRange;
     }
 
     if (query.name) {
@@ -40,20 +37,33 @@ export class DataController {
       accomQuery.isAvailable = query.isAvailable === 'true';
     }
 
+    return this.accommodationService.findFiltered(accomQuery, limit);
+  }
 
-    if (query.availability) {
-      listingQuery.availability = query.availability === 'true';
+  @Get('data/listings')
+  async getListings(@Query() query: Record<string, string>) {
+    const listingQuery: any = {};
+    const limit = query.limit ? +query.limit : 10;
+
+    if (query.city) {
+      listingQuery.city = new RegExp(query.city, 'i');
+    }
+
+    if (query.priceMin || query.priceMax) {
+      const priceRange: any = {};
+      if (query.priceMin) priceRange.$gte = +query.priceMin;
+      if (query.priceMax) priceRange.$lte = +query.priceMax;
+      listingQuery.pricePerNight = priceRange;
+    }
+
+    if (query.availability !== undefined) {
+      listingQuery.availability = query.availability;
     }
 
     if (query.priceSegment) {
       listingQuery.priceSegment = query.priceSegment;
     }
 
-    const [accommodations, listings] = await Promise.all([
-      this.accommodationService.findFiltered(accomQuery),
-      this.listingService.findFiltered(listingQuery),
-    ]);
-
-    return [...accommodations, ...listings];
+    return this.listingService.findFiltered(listingQuery, limit);
   }
 }

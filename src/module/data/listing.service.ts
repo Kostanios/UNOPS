@@ -19,8 +19,8 @@ export class ListingService {
     return this.model.create(transformed)
   }
 
-  async findFiltered(query: any) {
-    return this.model.find(query).exec();
+  async findFiltered(query: any, limit: number = 10) {
+    return this.model.find(query).limit(limit).exec();
   }
 
   async bulkSave(data: any[]): Promise<{success: number, errors: any[]}> {
