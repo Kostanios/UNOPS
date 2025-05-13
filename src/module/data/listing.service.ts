@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { Listing } from '../../schema/listing.schema';
 import { ChunkError } from '../../type/error';
 
-
 @Injectable()
 export class ListingService {
   constructor(@InjectModel(Listing.name) private model: Model<Listing>) {}
