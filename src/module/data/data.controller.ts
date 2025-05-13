@@ -10,14 +10,18 @@ export class DataController {
     private readonly listingService: ListingService,
   ) {}
 
-  @Get()
+  @Get('data')
   async getFiltered(@Query() query: Record<string, string>) {
     const accomQuery: any = {};
     const listingQuery: any = {};
 
     if (query.city) {
-      accomQuery.city = new RegExp(query.city, 'i');
+      accomQuery['address.city'] = new RegExp(query.city, 'i');
       listingQuery.city = new RegExp(query.city, 'i');
+    }
+
+    if (query.country) {
+      accomQuery['address.country'] = new RegExp(query.country, 'i');
     }
 
     if (query.priceMin || query.priceMax) {
@@ -26,6 +30,23 @@ export class DataController {
       if (query.priceMax) priceRange.$lte = +query.priceMax;
       accomQuery.priceForNight = priceRange;
       listingQuery.pricePerNight = priceRange;
+    }
+
+    if (query.name) {
+      accomQuery.name = new RegExp(query.name, 'i');
+    }
+
+    if (query.isAvailable) {
+      accomQuery.isAvailable = query.isAvailable === 'true';
+    }
+
+
+    if (query.availability) {
+      listingQuery.availability = query.availability === 'true';
+    }
+
+    if (query.priceSegment) {
+      listingQuery.priceSegment = query.priceSegment;
     }
 
     const [accommodations, listings] = await Promise.all([
